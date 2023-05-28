@@ -1,0 +1,16 @@
+
+# results
+*.mp4
+*.png
+*.jpg
+
+# python
+.ipynb_checkpoints
+__pycache__
+
+# dl weights
+*.etlt
+*.bin
+
+# mac
+.DS_Store
