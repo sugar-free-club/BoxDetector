@@ -1,0 +1,4 @@
+packaging
+gradio
+opencv-python
+pycuda
