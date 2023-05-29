@@ -83,6 +83,7 @@ class Detector(object):
         del self.stream
         del self.cuda_outputs
         del self.cuda_inputs
+        self.ctx.detach()
     #利用生成的可执行上下文执行推理
     def detect(self, img, conf_th=0.3):
         """Detect objects in the input image."""
