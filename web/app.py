@@ -17,25 +17,25 @@ with gr.Blocks(title="Sugar-free club", css=css) as demo:
     # api
     def run(image):
         '''test_model'''
-        input = image
-        result = box_detection.detect_your_image(detector, input)
+        inputs = image
+        result = box_detection.detect_your_image(detector, inputs)
         return result
 
     
     def test_mAP(image):
         '''test_mAP'''
-        input = "/home/nvidia/8th_CV/mAP/input/images/"
-        mAP = str(box_detection.bench_map(detector, input))##.replace('Figure(640x480)', '')
+        inputs = os.path.join(os.path.dirname(__file__), "images/")
+        mAP = str(box_detection.bench_map(detector, inputs))##.replace('Figure(640x480)', '')
         
         print(mAP)
-        # subprocess.run(["python","/home/lcy/Projects/BoxDetector/src/8th_CV/cv_map.py"])
+        return mAP
         
         
     def test_fps(image):
         '''test_latency'''
-        input = "/home/nvidia/8th_CV/box_test_video.mp4"
-        result = box_detection.bench_fps(detector, input)
-        # subprocess.run(["python","/home/lcy/Projects/BoxDetector/src/8th_CV/cv_fps.py"])
+        inputs = os.path.join(os.path.dirname(__file__), "box_test_video.mp4")
+        result = box_detection.bench_fps(detector, inputs)
+        return result
     # page
     gr.Markdown("<h1>Sugar-free box detection.</h1>")
     with gr.Row():
@@ -46,7 +46,7 @@ with gr.Blocks(title="Sugar-free club", css=css) as demo:
         btn_run = gr.Button("Submit")
         btn_clear = gr.Button("Clear")
         btn_mAP = gr.Button("Test mAP")
-        btn_latency = gr.Button("Test fps")
+        btn_fps = gr.Button("Test fps")
     # examples
     with gr.Row():
         gr.Examples(
@@ -55,8 +55,7 @@ with gr.Blocks(title="Sugar-free club", css=css) as demo:
                       ],
             inputs=image_input,
             outputs=image_output,
-            fn=run,
-            cache_examples=True,
+            fn=run
         )
         text = gr.Textbox(label="button test")
         
@@ -65,7 +64,7 @@ with gr.Blocks(title="Sugar-free club", css=css) as demo:
         fn=run,
         inputs=image_input,
         show_progress=True,
-        outputs=text
+        outputs=image_output
     )
     
     btn_mAP.click(
@@ -75,7 +74,7 @@ with gr.Blocks(title="Sugar-free club", css=css) as demo:
         outputs=text
     )
     
-    btn_mAP.click(
+    btn_fps.click(
         fn=test_fps,
         inputs=image_input,
         show_progress=True,

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import time
 import argparse
@@ -116,7 +117,7 @@ def detect_one(img, detector, conf_th, vis):
     print("clss: "+str(clss))
     print("confs: "+str(confs))
     img = vis.draw_bboxes(img, boxes, confs, clss)
-    result_path = "./uploads/result.jpg"
+    result_path = "/home/ethan/Projects/web/uploads/result.jpg"
     cv2.imwrite(result_path,img)        
     print("time: "+str(curr_fps)+"(sec)")
     return result_path
@@ -139,6 +140,7 @@ def main():
     detector = Detector(engine_path, INPUT_HW)
     fps = bench_fps(detector, './box_test_video.mp4')
     mAP = bench_map(detector, './test_imgs/')
+    re  = detect_your_image(detector, '100.png')
     print("Benchmark finished.")
     print("FPS: ", str(fps))
     print("mAP: ", str(mAP))
