@@ -32,6 +32,9 @@ with gr.Blocks(title="Sugar-free club", theme=theme) as demo:
     # api
     def run(image):
         '''test_model'''
+        if image == None:
+            raise gr.Error('Please upload image first!')
+            return None
         inputs = image
         result = box_detection.detect_your_image(detector, inputs)
         return result
