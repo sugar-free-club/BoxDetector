@@ -78,6 +78,7 @@ with gr.Blocks(title="Sugar-free club", theme=theme, css=css) as demo:
             fn=run
         )
         text = gr.Textbox(label="Result").style(height=50)
+    gr.HTML(value="<br><br><center>Presented by <a href=https://github.com/Sugar-Free-Club>Sugar-Free club</a> 🐾 | Built with <a href=https://gradio.app/>Gradio</a>🔩</center>")
 
         
     #button function
