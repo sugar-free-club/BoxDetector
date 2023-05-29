@@ -3,6 +3,7 @@
 *.mp4
 *.png
 *.jpg
+*.jpeg
 
 # python
 .ipynb_checkpoints
