@@ -28,34 +28,36 @@ theme = gr.themes.Soft(primary_hue="red", secondary_hue="pink",spacing_size="md"
             button_large_padding="20px",
         )
 
-with gr.Blocks(title="Sugar-free club", theme=theme) as demo:
+with gr.Blocks(title="Sugar-free club", theme=theme, css=css) as demo:
     # api
     def run(image):
         '''test_model'''
         if image == None:
             raise gr.Error('Please upload image first!')
-            return None
         inputs = image
         result = box_detection.detect_your_image(detector, inputs)
         return result
     
-    def test_mAP(image):
+    def test_mAP():
         '''test_mAP'''
         inputs = os.path.join(os.path.dirname(__file__), "images/")
         mAP = str(box_detection.bench_map(detector, inputs))##.replace('Figure(640x480)', '')
-        return mAP
+        return [mAP,gr.Button.update(interactive=True),gr.Button.update(interactive=True),gr.Button.update(interactive=True)]
         
-    def test_fps(image):
+    def test_fps():
         '''test_latency'''
         inputs = os.path.join(os.path.dirname(__file__), "box_test_video.mp4")
         result = box_detection.bench_fps(detector, inputs)
-        return result
+        return [result,gr.Button.update(interactive=True),gr.Button.update(interactive=True),gr.Button.update(interactive=True)]
     
     def clear():
         '''empty the input'''
         return [None, None]
+
+    def disable():
+        return [gr.Button.update(interactive=False),gr.Button.update(interactive=False),gr.Button.update(interactive=False)]
     # page
-    gr.Markdown("<h1>Sugar-free box detection.</h1>")
+    gr.Markdown("<h1>📦Sugar-free box detector</h1>")
     with gr.Row():
         image_input = gr.Image(type='filepath', label="Input Image").style(height=350)
         image_output = gr.Image(type='filepath', interactive=False, label="Output Image").style(height=350)
@@ -76,6 +78,7 @@ with gr.Blocks(title="Sugar-free club", theme=theme) as demo:
             fn=run
         )
         text = gr.Textbox(label="Result").style(height=50)
+
         
     #button function
     btn_run.click(
@@ -86,17 +89,25 @@ with gr.Blocks(title="Sugar-free club", theme=theme) as demo:
     )
     
     btn_mAP.click(
+        fn=disable,
+        outputs=[btn_mAP,btn_fps,btn_run],
+    )
+    
+    btn_fps.click(
+        fn=disable,
+        outputs=[btn_mAP,btn_fps,btn_run],
+    )
+    
+    btn_mAP.click(
         fn=test_mAP,
-        inputs=image_input,
         show_progress=True,
-        outputs=text
+        outputs=[text,btn_mAP,btn_fps,btn_run]
     )
     
     btn_fps.click(
         fn=test_fps,
-        inputs=image_input,
         show_progress=True,
-        outputs=text
+        outputs=[text,btn_mAP,btn_fps,btn_run]
     )
     
     btn_clear.click(
