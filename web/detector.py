@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import ctypes
 import cv2
@@ -83,9 +84,12 @@ class Detector(object):
         del self.stream
         del self.cuda_outputs
         del self.cuda_inputs
+        self.ctx.detach()
     #利用生成的可执行上下文执行推理
     def detect(self, img, conf_th=0.3):
         """Detect objects in the input image."""
+        self.ctx.push()
+        self.stream.synchronize()
         img_resized = _preprocess_trt(img, self.input_shape)
         np.copyto(self.host_inputs[0], img_resized.ravel())
         #将处理好的图片从CPU内存中复制到GPU显存
@@ -104,5 +108,6 @@ class Detector(object):
         self.stream.synchronize()
 
         output = self.host_outputs[0]
+        self.ctx.pop()
         return _postprocess_trt(img, output, conf_th, self.output_layout)
     

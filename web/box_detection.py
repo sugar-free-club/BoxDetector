@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import time
 import argparse
@@ -105,6 +106,32 @@ def bench_map(detector, test_set):
     mAP = detect_dir(test_set, detector, conf_th=0.3, vis=vis)
     return mAP
 
+def detect_one(img, detector, conf_th, vis):
+    full_scrn = False
+    tic = time.clock()
+    ##开始检测，并将结果写到result.jpg中
+    boxes, confs, clss = detector.detect(img, conf_th)
+    toc = time.clock()
+    curr_fps = (toc - tic)
+    print("boxes: "+str(boxes))
+    print("clss: "+str(clss))
+    print("confs: "+str(confs))
+    img = vis.draw_bboxes(img, boxes, confs, clss)
+    result_path = "/home/ethan/Projects/web/uploads/result.jpg"
+    cv2.imwrite(result_path,img)        
+    print("time: "+str(curr_fps)+"(sec)")
+    return result_path
+    
+    
+def detect_your_image(detector, filename):    
+    img = cv2.imread(filename)
+    vis = BBoxVisualization(cls_dict)
+    print("start detection!")
+    filepath = detect_one(img, detector, conf_th=0.3, vis=vis)
+    cv2.destroyAllWindows()
+    return filepath
+    #print("ok")
+
 
 def main():
     args = parse_args()
@@ -113,6 +140,7 @@ def main():
     detector = Detector(engine_path, INPUT_HW)
     fps = bench_fps(detector, './box_test_video.mp4')
     mAP = bench_map(detector, './test_imgs/')
+    re  = detect_your_image(detector, '100.png')
     print("Benchmark finished.")
     print("FPS: ", str(fps))
     print("mAP: ", str(mAP))
