@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import gradio as gr
 import os
 import subprocess
@@ -9,18 +10,15 @@ from detector import Detector
 
 INPUT_HW = (300, 300)
 
-engine_path = './TRT_ssd_resnet18_box.bin'
+engine_path = '/home/nvidia/SugarFree/BoxDetector/models/ssd-complex/export/ssd_resnet18_point3.bin'
 detector = Detector(engine_path, INPUT_HW)
 css = "footer {display: none !important;} .gradio-container {min-height: 0px !important;}"
 theme = gr.themes.Soft(primary_hue="red", secondary_hue="pink",spacing_size="md",radius_size="sm").set(
             body_background_fill="repeating-linear-gradient(45deg, *primary_100, *primary_100 10px, *primary_50 10px, *primary_50 20px)",
-            body_background_fill_dark="repeating-linear-gradient(45deg, *primary_800, *primary_800 10px, *primary_900 10px, *primary_900 20px)",
             button_primary_background_fill="linear-gradient(70deg, *primary_300, *secondary_400)",
             button_primary_background_fill_hover="linear-gradient(70deg, *primary_200, *secondary_300)",
             button_primary_text_color="white",
-            button_primary_background_fill_dark="linear-gradient(70deg, *primary_600, *secondary_800)",
             slider_color="*secondary_300",
-            slider_color_dark="*secondary_600",
             block_title_text_weight="600",
             block_border_width="3px",
             block_shadow="*shadow_drop_lg",
@@ -117,4 +115,6 @@ with gr.Blocks(title="Sugar-free club", theme=theme, css=css) as demo:
     )
         
 # demo.launch(server_name="192.168.43.135", favicon_path='icon.jpeg') 
-demo.launch(server_name="172.20.10.3")
+demo.launch(server_name="0.0.0.0", server_port=5000)
+# demo.launch(server_name="36.150.110.74",
+#             server_port=5000)

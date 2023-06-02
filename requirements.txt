@@ -1,4 +1,8 @@
+six
 packaging
+pandas==1.3.5
+matplotlib==3.5.3
 gradio
 opencv-python
 pycuda
+wheel
