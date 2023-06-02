@@ -117,7 +117,7 @@ def detect_one(img, detector, conf_th, vis):
     print("clss: "+str(clss))
     print("confs: "+str(confs))
     img = vis.draw_bboxes(img, boxes, confs, clss)
-    result_path = "/home/ethan/Projects/web/uploads/result.jpg"
+    result_path = "./uploads/result.jpg"
     cv2.imwrite(result_path,img)        
     print("time: "+str(curr_fps)+"(sec)")
     return result_path
