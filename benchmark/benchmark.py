@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import time
 import argparse
@@ -9,23 +10,28 @@ from detector import Detector
 from utils.visualization import BBoxVisualization
 
 
-INPUT_HW = (300, 300)
-cls_dict = {
+cls_dict_ssd = {
     0: 'bg',
     1: 'box'
+}
+
+cls_dict_rtmdet = {
+    0: 'box'
 }
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     
+    parser.add_argument('network_type')
     parser.add_argument('trt_plan')
+    parser.add_argument('hw')
     
     args = parser.parse_args()
     return args
 
 
-def detect_video(video, trt_ssd, conf_th, vis, result):
+def detect_video(video, trt_engine, conf_th, vis, result):
     full_scrn = False
     fps = 0.0
     tic = time.time()
@@ -40,7 +46,7 @@ def detect_video(video, trt_ssd, conf_th, vis, result):
     while True:
         ret,img = video.read()
         if img is not None:
-            boxes, confs, clss = trt_ssd.detect(img, conf_th)
+            boxes, confs, clss = trt_engine.detect(img, conf_th)
             #print("boxes,confs,clss: "+ str(boxes)+" "+ str(confs)+" "+str(clss))
             img = vis.draw_bboxes(img, boxes, confs, clss)
             videoWriter.write(img)
@@ -54,7 +60,7 @@ def detect_video(video, trt_ssd, conf_th, vis, result):
     return fps
 
 
-def detect_dir(dir, detector, conf_th, vis):
+def detect_dir(dir, detector, conf_th, vis, cls_dict):
     dirs = os.listdir(dir)
     print(dir)
     remove_old_detection_results = subprocess.Popen('rm ./mAP/input/detection-results/*',
@@ -67,11 +73,12 @@ def detect_dir(dir, detector, conf_th, vis):
             #print("val/images/"+str(i))
             img = cv2.imread(dir+str(i))
             boxes, confs, clss = detector.detect(img, conf_th)
+            img = vis.draw_bboxes(img, boxes, confs, clss)
+            cv2.imwrite("./result_img/"+str(i), img)
             new_file = open("./mAP/input/detection-results/"+os.path.splitext(i)[0]+".txt",'w+')
             if len(clss)>0:
                 for count in range(0, len(clss)):
-                    if clss[count] == 1:
-                        new_file.write("box ")
+                    new_file.write(cls_dict[clss[count]]+" ")
                     new_file.write(str(confs[count])+" ")
                     new_file.write(str(boxes[count][0])+" ")
                     new_file.write(str(boxes[count][1])+" ")
@@ -86,8 +93,12 @@ def detect_dir(dir, detector, conf_th, vis):
     return mAP_result.split('\\n')[-3]
 
 
-def bench_fps(detector, test_file):
+def bench_fps(detector, test_file, network_type):
     result_file_name = "./results/result_video.mp4"
+    if network_type == "rtmdet":
+        cls_dict = cls_dict_rtmdet
+    else:
+        cls_dict = cls_dict_ssd
     video = cv2.VideoCapture(test_file)
     vis = BBoxVisualization(cls_dict)
     print("start benching fps!")
@@ -99,20 +110,26 @@ def bench_fps(detector, test_file):
     return fps
 
 
-def bench_map(detector, test_set):
+def bench_map(detector, test_set, network_type):
+    if network_type == "rtmdet":
+        cls_dict = cls_dict_rtmdet
+    else:
+        cls_dict = cls_dict_ssd
     vis = BBoxVisualization(cls_dict)
     print("start benching map!")
-    mAP = detect_dir(test_set, detector, conf_th=0.3, vis=vis)
+    mAP = detect_dir(test_set, detector, conf_th=0.3, vis=vis, cls_dict=cls_dict)
     return mAP
 
 
 def main():
     args = parse_args()
     
+    nt = args.network_type
     engine_path = args.trt_plan
-    detector = Detector(engine_path, INPUT_HW)
-    fps = bench_fps(detector, './box_test_video.mp4')
-    mAP = bench_map(detector, './test_imgs/')
+    hw = int(args.hw)
+    detector = Detector(engine_path, (hw, hw), nt)
+    fps = bench_fps(detector, './box_test_video.mp4', nt)
+    mAP = bench_map(detector, './test_imgs/', nt)
     print("Benchmark finished.")
     print("FPS: ", str(fps))
     print("mAP: ", str(mAP))
