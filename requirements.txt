@@ -9,4 +9,5 @@ opencv-python
 pycuda
 onnx
 onnxruntime
-onnx-simplifier
+onnx-simplifier==0.2.18
+onnxoptimizer
