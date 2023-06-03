@@ -127,6 +127,35 @@ def bench_map(detector, test_set, network_type, progress):
     mAP = detect_dir(test_set, detector, progress, conf_th=0.3, vis=vis, cls_dict=cls_dict)
     return mAP
 
+def detect_one(img, detector, conf_th, vis):
+    full_scrn = False
+    tic = time.clock()
+    ##开始检测，并将结果写到result.jpg中
+    boxes, confs, clss = detector.detect(img, conf_th)
+    toc = time.clock()
+    curr_fps = (toc - tic)
+    print("boxes: "+str(boxes))
+    print("clss: "+str(clss))
+    print("confs: "+str(confs))
+    img = vis.draw_bboxes(img, boxes, confs, clss)
+    result_path = "./uploads/result.jpg"
+    cv2.imwrite(result_path,img)        
+    print("time: "+str(curr_fps)+"(sec)")
+    return result_path
+    
+    
+def detect_your_image(detector, filename, network_type):
+    if network_type == "rtmdet":
+        cls_dict = cls_dict_rtmdet
+    else:
+        cls_dict = cls_dict_ssd
+    img = cv2.imread(filename)
+    vis = BBoxVisualization(cls_dict)
+    print("start detection!")
+    filepath = detect_one(img, detector, conf_th=0.3, vis=vis)
+    cv2.destroyAllWindows()
+    return filepath
+    #print("ok")
 
 def main():
     args = parse_args()

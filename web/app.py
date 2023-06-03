@@ -44,7 +44,7 @@ with gr.Blocks(title="Sugar-free club", theme=theme, css=css) as demo:
         if image == None:
             raise gr.Error('Please upload image first!')
         inputs = image
-        result = box_detection.detect_your_image(detector, inputs)
+        result = box_detection.detect_your_image(detector, inputs, network_type)
         return result
     
     def test_mAP(progress=gr.Progress(track_tqdm=True)):
