@@ -30,6 +30,7 @@ def parse_args():
     parser.add_argument('trt_plan')
     parser.add_argument('hw')
     parser.add_argument('--config', default=None)
+    parser.add_argument('--video_path', default='./box_test_video.mp4')
     
     args = parser.parse_args()
     return args
@@ -101,7 +102,7 @@ def detect_dir(dir, detector, conf_th, vis, cls_dict):
 
 def bench_fps(detector, test_file, network_type):
     result_file_name = "./results/result_video.mp4"
-    if network_type == "rtmdet":
+    if network_type == "rtmdet" or network_type == "yolox":
         cls_dict = cls_dict_rtmdet
     else:
         cls_dict = cls_dict_ssd
@@ -117,7 +118,7 @@ def bench_fps(detector, test_file, network_type):
 
 
 def bench_map(detector, test_set, network_type):
-    if network_type == "rtmdet":
+    if network_type == "rtmdet" or network_type == "yolox":
         cls_dict = cls_dict_rtmdet
     else:
         cls_dict = cls_dict_ssd
@@ -133,12 +134,16 @@ def main():
     nt = args.network_type
     engine_path = args.trt_plan
     hw = int(args.hw)
+    video_path = args.video_path
     if nt == 'ssd':
         detector = DetectorSSD(engine_path, (hw, hw))
     elif nt == 'rtmdet':
         cfg = Config.fromfile(args.config)
         detector = DetectorRTMDet(engine_path, cfg)
-    fps = bench_fps(detector, './box_test_video.mp4', nt)
+    elif nt == 'yolox':
+        cfg = Config.fromfile(args.config)
+        detector = DetectorRTMDet(engine_path, cfg)
+    fps = bench_fps(detector, video_path, nt)
     mAP = bench_map(detector, './test_imgs/', nt)
     print("Benchmark finished.")
     print("FPS: ", str(fps))
