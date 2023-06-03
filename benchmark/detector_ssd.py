@@ -103,7 +103,6 @@ class DetectorSSD(object):
         for i in range(len(self.host_outputs)):
             cuda.memcpy_dtoh_async(
                 self.host_outputs[i], self.cuda_outputs[i], self.stream)
-            print("output ", str(i), " : ", str(self.host_outputs[i].size))
         self.stream.synchronize()
 
         output = self.host_outputs[0]
