@@ -5,8 +5,11 @@ import argparse
 import subprocess
 
 import cv2
+from mmengine.config import Config
 
-from detector import Detector
+
+from detector_ssd import DetectorSSD
+from detector_rtmdet import DetectorRTMDet
 from utils.visualization import BBoxVisualization
 
 
@@ -26,6 +29,7 @@ def parse_args():
     parser.add_argument('network_type')
     parser.add_argument('trt_plan')
     parser.add_argument('hw')
+    parser.add_argument('--config', default=None)
     
     args = parser.parse_args()
     return args
@@ -43,15 +47,17 @@ def detect_video(video, trt_engine, conf_th, vis, result):
     fourcc = cv2.VideoWriter_fourcc('M', 'P', '4', 'V')
     videoWriter = cv2.VideoWriter(result, fourcc, fps, (frame_width,frame_height))
     ##开始循环检测，并将结果写到result.mp4中
+    id = 0
     while True:
         ret,img = video.read()
         if img is not None:
-            boxes, confs, clss = trt_engine.detect(img, conf_th)
+            boxes, confs, clss = trt_engine.detect(img, conf_th=conf_th, id=id)
             #print("boxes,confs,clss: "+ str(boxes)+" "+ str(confs)+" "+str(clss))
             img = vis.draw_bboxes(img, boxes, confs, clss)
             videoWriter.write(img)
             toc = time.time()
             curr_fps = 1.0 / (toc - tic)
+            id += 1
             fps = curr_fps if fps == 0.0 else (fps*0.95 + curr_fps*0.05)
             tic = toc
             #print("\rfps: "+str(fps),end="")
@@ -67,12 +73,12 @@ def detect_dir(dir, detector, conf_th, vis, cls_dict):
                                                     shell=True,
                                                     stdout=subprocess.PIPE,
                                                     stderr=subprocess.STDOUT)
-    for i in dirs:
+    for id, i in enumerate(dirs):
         if os.path.splitext(i)[1] == ".png":
             full_scrn = False
             #print("val/images/"+str(i))
             img = cv2.imread(dir+str(i))
-            boxes, confs, clss = detector.detect(img, conf_th)
+            boxes, confs, clss = detector.detect(img, conf_th=conf_th, id=id)
             img = vis.draw_bboxes(img, boxes, confs, clss)
             cv2.imwrite("./result_img/"+str(i), img)
             new_file = open("./mAP/input/detection-results/"+os.path.splitext(i)[0]+".txt",'w+')
@@ -127,7 +133,11 @@ def main():
     nt = args.network_type
     engine_path = args.trt_plan
     hw = int(args.hw)
-    detector = Detector(engine_path, (hw, hw), nt)
+    if nt == 'ssd':
+        detector = DetectorSSD(engine_path, (hw, hw))
+    elif nt == 'rtmdet':
+        cfg = Config.fromfile(args.config)
+        detector = DetectorRTMDet(engine_path, cfg)
     fps = bench_fps(detector, './box_test_video.mp4', nt)
     mAP = bench_map(detector, './test_imgs/', nt)
     print("Benchmark finished.")
