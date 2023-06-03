@@ -19,8 +19,8 @@ from detector_ssd import DetectorSSD
 
 # Use DetectorRTMDet
 network_type = 'rtmdet'
-engine_path = './models/rtmdet_fp32.engine'
-cfg = './rtmdet_tiny_fast_8xb8-300e_coco_box-colorful.py'
+engine_path = './models/end2end_fp32.engine'
+cfg = './models/rtmdet_tiny_fast_8xb8-300e_coco_box-colorful.py'
 cfg = Config.fromfile(cfg)
 detector = DetectorRTMDet(engine_path, cfg)
 css = "footer {display: none !important;} .gradio-container {min-height: 0px !important;}"
@@ -47,13 +47,13 @@ with gr.Blocks(title="Sugar-free club", theme=theme, css=css) as demo:
         result = box_detection.detect_your_image(detector, inputs)
         return result
     
-    def test_mAP(progress=gr.Progress()):
+    def test_mAP(progress=gr.Progress(track_tqdm=True)):
         '''test_mAP'''
-        inputs = os.path.join(os.path.dirname(__file__), "images/")
-        mAP = str(box_detection.bench_map(detector, inputs, progress))##.replace('Figure(640x480)', '')
+        inputs = '/home/ethan/Projects/boxdetector/benchmark/test_imgs/'
+        mAP = str(box_detection.bench_map(detector, inputs, network_type, progress))##.replace('Figure(640x480)', '')
         return [mAP,gr.Button.update(interactive=True),gr.Button.update(interactive=True),gr.Button.update(interactive=True)]
         
-    def test_fps(progress=gr.Progress()):
+    def test_fps(progress=gr.Progress(track_tqdm=True)):
         '''test_latency'''
         inputs = "./amazon_box.mp4"
         result = box_detection.bench_fps(detector, inputs, network_type, progress)
@@ -79,8 +79,8 @@ with gr.Blocks(title="Sugar-free club", theme=theme, css=css) as demo:
     # examples
     with gr.Row():
         gr.Examples(
-            examples=[os.path.join(os.path.dirname(__file__), "100.png"), 
-                      os.path.join(os.path.dirname(__file__), "101.png"),
+            examples=[os.path.join(os.path.dirname(__file__), "100.jpg"), 
+                      os.path.join(os.path.dirname(__file__), "101.jpg"),
                       ],
             inputs=image_input,
             outputs=image_output,
@@ -124,8 +124,9 @@ with gr.Blocks(title="Sugar-free club", theme=theme, css=css) as demo:
         fn=clear,
         outputs=[image_input, image_output]
     )
-        
+    
 # demo.launch(server_name="192.168.43.135", favicon_path='icon.jpeg') 
-demo.launch(server_name="0.0.0.0", server_port=5000)
+# demo.launch(server_name="0.0.0.0", server_port=5000)
 # demo.launch(server_name="36.150.110.74",
 #             server_port=5000)
+demo.queue(concurrency_count=20).launch(server_name="192.168.1.11", server_port=5000)

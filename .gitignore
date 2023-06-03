@@ -14,3 +14,8 @@ __pycache__
 
 # mac
 .DS_Store
+
+# app model
+web/models/*
+web/input/*
+web/.app.py.swp
