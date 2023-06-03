@@ -4,6 +4,8 @@ import time
 import argparse
 import subprocess
 
+from tqdm import tqdm
+
 import cv2
 from mmengine.config import Config
 
@@ -43,13 +45,14 @@ def detect_video(video, trt_engine, conf_th, vis, result):
     frame_width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = video.get(cv2.CAP_PROP_FPS)
+    video_length = int(video.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
     #print(str(frame_width)+str(frame_height))
     ##定义输入编码
     fourcc = cv2.VideoWriter_fourcc('M', 'P', '4', 'V')
     videoWriter = cv2.VideoWriter(result, fourcc, fps, (frame_width,frame_height))
     ##开始循环检测，并将结果写到result.mp4中
     id = 0
-    while True:
+    for i in tqdm(range(video_length)):
         ret,img = video.read()
         if img is not None:
             boxes, confs, clss = trt_engine.detect(img, conf_th=conf_th, id=id)
@@ -74,8 +77,8 @@ def detect_dir(dir, detector, conf_th, vis, cls_dict):
                                                     shell=True,
                                                     stdout=subprocess.PIPE,
                                                     stderr=subprocess.STDOUT)
-    for id, i in enumerate(dirs):
-        if os.path.splitext(i)[1] == ".png":
+    for id, i in enumerate(tqdm(dirs)):
+        if os.path.splitext(i)[1] == ".png" or os.path.splitext(i)[1] == ".jpg":
             full_scrn = False
             #print("val/images/"+str(i))
             img = cv2.imread(dir+str(i))
