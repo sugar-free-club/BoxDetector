@@ -1,3 +1,4 @@
+import time
 import mmcv
 import numpy as np
 import torch
@@ -48,7 +49,10 @@ class DetectorRTMDet(object):
 
         self.pre_pipeline = preprocess(cfg)
         
-    def detect(self, img, conf_th=0.3, id=1):
+    def detect(self, img, conf_th=0.3, id=1, is_profiling=False):
+        timeline = []
+        ### preprocess ###
+        tic = time.time()
         rgb = mmcv.imconvert(img, 'bgr', 'rgb')
         data, samples = self.test_pipeline(dict(img=rgb, img_id=id)).values()
         pad_param = samples.get('pad_param',
@@ -60,10 +64,18 @@ class DetectorRTMDet(object):
         scale_factor = samples.get('scale_factor', [1., 1])
         scale_factor = torch.asarray(scale_factor * 2, device=self.device)
         data = self.pre_pipeline(data).to(self.device)
+        toc = time.time()
+        timeline.append(toc-tic)
         
+        ### inference ###
+        tic = time.time()
         result = self.model(data)
+        toc = time.time()
+        timeline.append(toc-tic)
         
+        ### postprocess ###
         # Get candidate predict info by num_dets
+        tic = time.time()
         num_dets, bboxes, scores, labels = result
         scores = scores[0, :num_dets]
         bboxes = bboxes[0, :num_dets]
@@ -74,5 +86,14 @@ class DetectorRTMDet(object):
         bboxes[:, 0::2].clamp_(0, w)
         bboxes[:, 1::2].clamp_(0, h)
         bboxes = bboxes.round().int()
+        toc = time.time()
+        timeline.append(toc-tic)
+        
+        if is_profiling:
+            sum_timeline = sum(timeline)
+            print("Time breaking:\n PRE-", str(float(timeline[0])), " ", str(float(timeline[0]) / sum_timeline), "\n", \
+                " INF-", str(float(timeline[1])), " ", str(float(timeline[1]) / sum_timeline), "\n", \
+                " POST-", str(float(timeline[2])), " ", str(float(timeline[2]) / sum_timeline))
+        
         
         return bboxes.tolist(), scores.tolist(), labels.tolist()

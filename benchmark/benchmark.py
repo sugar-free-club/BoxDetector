@@ -33,12 +33,13 @@ def parse_args():
     parser.add_argument('hw')
     parser.add_argument('--config', default=None)
     parser.add_argument('--video_path', default='./box_test_video.mp4')
+    parser.add_argument('--profiling', default=False)
     
     args = parser.parse_args()
     return args
 
 
-def detect_video(video, trt_engine, conf_th, vis, result):
+def detect_video(video, trt_engine, conf_th, vis, result, is_profiling=False):
     full_scrn = False
     fps = 0.0
     tic = time.time()
@@ -55,7 +56,7 @@ def detect_video(video, trt_engine, conf_th, vis, result):
     for i in tqdm(range(video_length)):
         ret,img = video.read()
         if img is not None:
-            boxes, confs, clss = trt_engine.detect(img, conf_th=conf_th, id=id)
+            boxes, confs, clss = trt_engine.detect(img, conf_th=conf_th, id=id, is_profiling=is_profiling)
             #print("boxes,confs,clss: "+ str(boxes)+" "+ str(confs)+" "+str(clss))
             img = vis.draw_bboxes(img, boxes, confs, clss)
             videoWriter.write(img)
@@ -85,7 +86,8 @@ def detect_dir(dir, detector, conf_th, vis, cls_dict):
             boxes, confs, clss = detector.detect(img, conf_th=conf_th, id=id)
             img = vis.draw_bboxes(img, boxes, confs, clss)
             cv2.imwrite("./result_img/"+str(i), img)
-            new_file = open("./mAP/input/detection-results/"+os.path.splitext(i)[0]+".txt",'w+')
+            filename = "./mAP/input/detection-results/"+os.path.splitext(i)[0]+".txt"
+            new_file = open(filename,'w+')
             if len(clss)>0:
                 for count in range(0, len(clss)):
                     new_file.write(cls_dict[clss[count]]+" ")
@@ -94,7 +96,8 @@ def detect_dir(dir, detector, conf_th, vis, cls_dict):
                     new_file.write(str(boxes[count][1])+" ")
                     new_file.write(str(boxes[count][2])+" ")
                     new_file.write(str(boxes[count][3])+" \n")
-
+            assert os.path.exists(filename)
+    print("Detected images count:", str(len(os.listdir('./mAP/input/detection-results'))))
     mAP = subprocess.Popen('python3.7 ./mAP/main.py -np -na',
                            shell=True,
                            stdout=subprocess.PIPE,
@@ -103,7 +106,7 @@ def detect_dir(dir, detector, conf_th, vis, cls_dict):
     return mAP_result.split('\\n')[-3]
 
 
-def bench_fps(detector, test_file, network_type):
+def bench_fps(detector, test_file, network_type, is_profiling=False):
     result_file_name = "./results/result_video.mp4"
     if network_type == "rtmdet" or network_type == "yolox":
         cls_dict = cls_dict_rtmdet
@@ -113,7 +116,7 @@ def bench_fps(detector, test_file, network_type):
     vis = BBoxVisualization(cls_dict)
     print("start benching fps!")
     
-    fps = detect_video(video, detector, conf_th=0.4, vis=vis, result=result_file_name)
+    fps = detect_video(video, detector, conf_th=0.4, vis=vis, result=result_file_name, is_profiling=True)
     
     video.release()
     cv2.destroyAllWindows()
@@ -138,6 +141,7 @@ def main():
     engine_path = args.trt_plan
     hw = int(args.hw)
     video_path = args.video_path
+    is_profiling = args.profiling
     if nt == 'ssd':
         detector = DetectorSSD(engine_path, (hw, hw))
     elif nt == 'rtmdet':
@@ -146,7 +150,7 @@ def main():
     elif nt == 'yolox':
         cfg = Config.fromfile(args.config)
         detector = DetectorRTMDet(engine_path, cfg)
-    fps = bench_fps(detector, video_path, nt)
+    fps = bench_fps(detector, video_path, nt, is_profiling)
     mAP = bench_map(detector, './test_imgs/', nt)
     print("Benchmark finished.")
     print("FPS: ", str(fps))

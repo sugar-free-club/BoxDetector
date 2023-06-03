@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import time
 import os
 import ctypes
 
@@ -87,25 +88,46 @@ class DetectorSSD(object):
         del self.cuda_outputs
         del self.cuda_inputs
     #利用生成的可执行上下文执行推理
-    def detect(self, img, conf_th=0.3, id=1):
+    def detect(self, img, conf_th=0.3, id=1, is_profiling=False):
         """Detect objects in the input image."""
+        timeline = []
+        tic = time.time()
         img_resized = _preprocess_trt(img, self.input_shape)
+        
         np.copyto(self.host_inputs[0], img_resized.ravel())
+        toc = time.time()
+        timeline.append(toc-tic)
+        
         #将处理好的图片从CPU内存中复制到GPU显存
+        tic = time.time()
         cuda.memcpy_htod_async(
             self.cuda_inputs[0], self.host_inputs[0], self.stream)
+        
         #开始执行推理任务
         self.context.execute_async(
             batch_size=1,
             bindings=self.bindings,
             stream_handle=self.stream.handle)
+        
         #将推理结果输出从GPU显存复制到CPU内存
         for i in range(len(self.host_outputs)):
             cuda.memcpy_dtoh_async(
                 self.host_outputs[i], self.cuda_outputs[i], self.stream)
         self.stream.synchronize()
-
+        toc = time.time()
+        timeline.append(toc-tic)
+        
+        tic = time.time()
         output = self.host_outputs[0]
         res = _postprocess_trt(img, output, conf_th, self.output_layout)
+        toc = time.time()
+        timeline.append(toc-tic)
+        
+        if is_profiling:
+            sum_timeline = sum(timeline)
+            print("Time breaking:\n PRE-", str(float(timeline[0])), " ", str(float(timeline[0]) / sum_timeline), "\n", \
+                " INF-", str(float(timeline[1])), " ", str(float(timeline[1]) / sum_timeline), "\n", \
+                " POST-", str(float(timeline[2])), " ", str(float(timeline[2]) / sum_timeline))
+        
         return res
     
