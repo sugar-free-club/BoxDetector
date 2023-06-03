@@ -5,13 +5,24 @@ import subprocess
 import sys
 import time
 
+from mmengine.config import Config
+
 import box_detection
-from detector import Detector
+from detector_rtmdet import DetectorRTMDet
+from detector_ssd import DetectorSSD
 
-INPUT_HW = (300, 300)
+# use DetectorSSD
+# network_type = 'ssd'
+# INPUT_HW = (300, 300)
+# engine_path = '/home/nvidia/SugarFree/BoxDetector/models/ssd-complex/fp32/TRT_ssd_resnet18_point3.bin'
+# detector = DetectorSSD(engine_path, input_shape=INPUT_HW)
 
-engine_path = '/home/nvidia/SugarFree/BoxDetector/models/ssd-complex/export/ssd_resnet18_point3.bin'
-detector = Detector(engine_path, INPUT_HW)
+# Use DetectorRTMDet
+network_type = 'rtmdet'
+engine_path = './models/rtmdet_fp32.engine'
+cfg = './rtmdet_tiny_fast_8xb8-300e_coco_box-colorful.py'
+cfg = Config.fromfile(cfg)
+detector = DetectorRTMDet(engine_path, cfg)
 css = "footer {display: none !important;} .gradio-container {min-height: 0px !important;}"
 theme = gr.themes.Soft(primary_hue="red", secondary_hue="pink",spacing_size="md",radius_size="sm").set(
             body_background_fill="repeating-linear-gradient(45deg, *primary_100, *primary_100 10px, *primary_50 10px, *primary_50 20px)",
@@ -36,16 +47,16 @@ with gr.Blocks(title="Sugar-free club", theme=theme, css=css) as demo:
         result = box_detection.detect_your_image(detector, inputs)
         return result
     
-    def test_mAP():
+    def test_mAP(progress=gr.Progress()):
         '''test_mAP'''
         inputs = os.path.join(os.path.dirname(__file__), "images/")
-        mAP = str(box_detection.bench_map(detector, inputs))##.replace('Figure(640x480)', '')
+        mAP = str(box_detection.bench_map(detector, inputs, progress))##.replace('Figure(640x480)', '')
         return [mAP,gr.Button.update(interactive=True),gr.Button.update(interactive=True),gr.Button.update(interactive=True)]
         
-    def test_fps():
+    def test_fps(progress=gr.Progress()):
         '''test_latency'''
-        inputs = os.path.join(os.path.dirname(__file__), "box_test_video.mp4")
-        result = box_detection.bench_fps(detector, inputs)
+        inputs = "./amazon_box.mp4"
+        result = box_detection.bench_fps(detector, inputs, network_type, progress)
         return [result,gr.Button.update(interactive=True),gr.Button.update(interactive=True),gr.Button.update(interactive=True)]
     
     def clear():
@@ -55,7 +66,7 @@ with gr.Blocks(title="Sugar-free club", theme=theme, css=css) as demo:
     def disable():
         return [gr.Button.update(interactive=False),gr.Button.update(interactive=False),gr.Button.update(interactive=False)]
     # page
-    gr.Markdown("<h1>📦Sugar-free box detector</h1>")
+    gr.Markdown("<h1>📦 Sugar-free box detector</h1>")
     with gr.Row():
         image_input = gr.Image(type='filepath', label="Input Image").style(height=350)
         image_output = gr.Image(type='filepath', interactive=False, label="Output Image").style(height=350)
