@@ -36,15 +36,29 @@ theme = gr.themes.Soft(primary_hue="red", secondary_hue="pink",spacing_size="md"
             button_shadow="*shadow_drop_lg",
             button_large_padding="20px",
         )
+flag = False
 
 with gr.Blocks(title="Sugar-free club", theme=theme, css=css) as demo:
     # api
+    def get_imgs():
+        images = [
+                "100.jpg",
+                "101.jpg",
+                "103.png",
+                "web_sample.jpg",
+        ]
+        return images
+
+    def get_imgs_h():
+        images = []
+        return images
+    
     def run(image):
         '''test_model'''
         if image == None:
             raise gr.Error('Please upload image first!')
         inputs = image
-        result = box_detection.detect_your_image(detector, inputs)
+        result = box_detection.detect_your_image(detector, inputs, network_type)
         return result
     
     def test_mAP(progress=gr.Progress(track_tqdm=True)):
@@ -65,6 +79,10 @@ with gr.Blocks(title="Sugar-free club", theme=theme, css=css) as demo:
 
     def disable():
         return [gr.Button.update(interactive=False),gr.Button.update(interactive=False),gr.Button.update(interactive=False)]
+    
+    def show_img():
+        flag = flag & False
+        return gr.Dataset.update(visible=flag)
     # page
     gr.Markdown("<h1>📦 Sugar-free box detector</h1>")
     with gr.Row():
@@ -87,6 +105,13 @@ with gr.Blocks(title="Sugar-free club", theme=theme, css=css) as demo:
             fn=run
         )
         text = gr.Textbox(label="Result").style(height=50)
+    with gr.Row():
+        btn_sce = gr.Button("👁️ Show Scenario", variant="primary")
+        btn_sce_h = gr.Button("Hide Scenario", variant="primary")
+        
+    with gr.Row():
+        imgs = gr.Gallery(label="Generated images", show_label=False).style(columns=[2], rows=[2], object_fit="contain", height="auto")
+    
     gr.HTML(value="<br><br><center>Presented by <a href=https://github.com/Sugar-Free-Club>Sugar-Free club</a> 🐾 | Built with <a href=https://gradio.app/>Gradio</a>🔩</center>")
 
         
@@ -124,6 +149,9 @@ with gr.Blocks(title="Sugar-free club", theme=theme, css=css) as demo:
         fn=clear,
         outputs=[image_input, image_output]
     )
+    
+    btn_sce.click(get_imgs, None, imgs)
+    btn_sce.click(get_imgs_h, None, imgs)
     
 # demo.launch(server_name="192.168.43.135", favicon_path='icon.jpeg') 
 # demo.launch(server_name="0.0.0.0", server_port=5000)
