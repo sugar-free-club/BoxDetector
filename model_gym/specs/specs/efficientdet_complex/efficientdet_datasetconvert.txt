@@ -1,0 +1,7 @@
+dataset_convert:
+  image_dir: '/workspace/tao-experiments/data/raw-data/train2017/'
+  annotations_file: '/workspace/tao-experiments/data/raw-data/annotations/instances_train2017.json'
+  output_dir: '/workspace/tao-experiments/data'
+  tag: 'train'
+  num_shards: 256
+  include_masks: True

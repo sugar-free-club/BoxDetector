@@ -1,0 +1,8 @@
+coco_config {
+  root_directory_path: "/workspace/tao-experiments/datasets/colorful/"
+  img_dir_names: ["val", "train"]
+  annotation_files: ["val.json", "train.json"]
+  num_partitions: 2
+  num_shards: [3,7]
+}
+image_directory_path: "/workspace/tao-experiments/datasets/colorful/"

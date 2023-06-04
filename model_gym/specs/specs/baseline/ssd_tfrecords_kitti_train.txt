@@ -1,0 +1,15 @@
+kitti_config {
+  root_directory_path: "/workspace/tao-experiments/datasets/baseline/box"
+  image_dir_name: "rgb"
+  label_dir_name: "object_detection"
+  image_extension: ".png"
+  partition_mode: "random"
+  num_partitions: 2
+  val_split: 0
+  num_shards: 10
+}
+image_directory_path: "/workspace/tao-experiments/datasets/baseline/box"
+target_class_mapping {
+    key: "box"
+    value: "box"
+}

@@ -1,0 +1,82 @@
+random_seed: 42
+yolov3_config {
+  big_anchor_shape: "[(58.59, 55.08), (72.66, 78.52), (108.40, 121.29)]"
+  mid_anchor_shape: "[(19.92, 38.09), (35.74, 29.88), (43.36, 43.36)]"
+  small_anchor_shape: "[(14.06, 18.16), (24.02, 17.58), (26.37, 23.44)]"
+  matching_neutral_box_iou: 0.7
+  arch: "mobilenet_v2"
+  nlayers: 18
+  arch_conv_blocks: 2
+  loss_loc_weight: 0.8
+  loss_neg_obj_weights: 100.0
+  loss_class_weights: 1.0
+  freeze_bn: false
+  force_relu: false
+}
+training_config {
+  batch_size_per_gpu: 8
+  num_epochs: 80
+  enable_qat: false
+  checkpoint_interval: 10
+  learning_rate {
+  soft_start_annealing_schedule {
+    min_learning_rate: 1e-6
+    max_learning_rate: 1e-4
+    soft_start: 0.1
+    annealing: 0.5
+    }
+  }
+  regularizer {
+    type: L1
+    weight: 3e-5
+  }
+  optimizer {
+    adam {
+      epsilon: 1e-7
+      beta1: 0.9
+      beta2: 0.999
+      amsgrad: false
+    }
+  }
+  pruned_model_path: "/workspace/tao-experiments/models/yolov3-mobilenetv2/experiment_dir_pruned/yolov3_mobilenetv2_pruned_point6.tlt"
+
+}
+eval_config {
+  average_precision_mode: SAMPLE
+  batch_size: 8
+  matching_iou_threshold: 0.5
+}
+nms_config {
+  confidence_threshold: 0.001
+  clustering_iou_threshold: 0.5
+  top_k: 200
+}
+augmentation_config {
+  hue: 0.1
+  saturation: 1.5
+  exposure:1.5
+  vertical_flip:0
+  horizontal_flip: 0.5
+  jitter: 0.3
+  output_width: 1248
+  output_height: 384
+  output_channel: 3
+  randomize_input_shape_period: 0
+}
+dataset_config {
+  data_sources: {
+    tfrecords_path: "/workspace/tao-experiments/datasets/complex/tfrecords/kitti_train*"
+    image_directory_path: "/workspace/tao-experiments/datasets/complex/box/rgb"
+    label_directory_path: "/workspace/tao-experiments/datasets/complex/box/object_detection"
+  }
+  image_extension: "png"
+  include_difficult_in_training: true
+  target_class_mapping {
+      key: "box"
+      value: "box"
+  }
+  validation_data_sources: {
+      label_directory_path: "/workspace/tao-experiments/datasets/complex/box/val/label"
+      image_directory_path: "/workspace/tao-experiments/datasets/complex/box/val/image"
+  }
+}

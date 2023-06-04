@@ -1,0 +1,82 @@
+random_seed: 42
+yolov3_config {
+  big_anchor_shape: "[(48.12, 45.62), (65.00, 66.25), (96.25, 105.62)]"
+  mid_anchor_shape: "[(32.50, 21.25),(21.25, 40.00), (35.62, 31.25)]"
+  small_anchor_shape: "[(5.62, 26.25), (16.25, 18.75), (24.38, 21.88)]"
+  matching_neutral_box_iou: 0.7
+  arch: "resnet"
+  nlayers: 18
+  arch_conv_blocks: 2
+  loss_loc_weight: 0.8
+  loss_neg_obj_weights: 100.0
+  loss_class_weights: 1.0
+  freeze_bn: false
+  force_relu: false
+}
+training_config {
+  batch_size_per_gpu: 8
+  num_epochs: 80
+  enable_qat: false
+  checkpoint_interval: 10
+  learning_rate {
+  soft_start_annealing_schedule {
+    min_learning_rate: 1e-6
+    max_learning_rate: 1e-4
+    soft_start: 0.1
+    annealing: 0.5
+    }
+  }
+  regularizer {
+    type: L1
+    weight: 3e-5
+  }
+  optimizer {
+    adam {
+      epsilon: 1e-7
+      beta1: 0.9
+      beta2: 0.999
+      amsgrad: false
+    }
+  }
+  pruned_model_path: "/workspace/tao-experiments/models/yolov3-resnet18/experiment_dir_pruned/yolov3_resnet18_pruned_point4.tlt"
+
+}
+eval_config {
+  average_precision_mode: SAMPLE
+  batch_size: 8
+  matching_iou_threshold: 0.5
+}
+nms_config {
+  confidence_threshold: 0.001
+  clustering_iou_threshold: 0.5
+  top_k: 200
+}
+augmentation_config {
+  hue: 0.1
+  saturation: 1.5
+  exposure:1.5
+  vertical_flip:0
+  horizontal_flip: 0.5
+  jitter: 0.3
+  output_width: 320
+  output_height: 320
+  output_channel: 3
+  randomize_input_shape_period: 0
+}
+dataset_config {
+  data_sources: {
+    tfrecords_path: "/workspace/tao-experiments/datasets/complex/tfrecords/kitti_train*"
+    image_directory_path: "/workspace/tao-experiments/datasets/complex/box/rgb"
+    label_directory_path: "/workspace/tao-experiments/datasets/complex/box/object_detection"
+  }
+  image_extension: "png"
+  include_difficult_in_training: true
+  target_class_mapping {
+      key: "box"
+      value: "box"
+  }
+  validation_data_sources: {
+      label_directory_path: "/workspace/tao-experiments/datasets/complex/box/val/label"
+      image_directory_path: "/workspace/tao-experiments/datasets/complex/box/val/image"
+  }
+}
