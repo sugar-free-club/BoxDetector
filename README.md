@@ -26,6 +26,12 @@ We are participating in the NVIDIA 8th Sky Hackathon.
 
 ## Usage
 
+Server: NVIDIA RTX2080Ti to prepare data and train models.
+
+Device: NVIDIA XAVIER NX to deploy models.
+
+We recommended using JetPack5.0+ on the device for running our web page, otherwise you should upgrade Python version to at least 3.7. There are some scripts in the root path of this repo, but we cannot guarantee their correctness.
+
 ### Preparing data
 
 Using NVIDIA Omniverse Replicator to prepare datasets.
@@ -40,11 +46,11 @@ All objects in the scenario can be configured in `genreate_data.py`.
 
 We use NVIDIA TAO to train SSD models. You can learn from [model_gym/ModelGym.ipynb](./model_gym/ModelGym.ipynb).
 
-We use MMYOLO to train YOLO models. Configs are inside [weights](./weights/).
+We use [MMYOLO](https://github.com/open-mmlab/mmyolo) to train YOLO models. Configs are inside [weights](./weights/).
 
 ### Deployment
 
-We use `trtexec` to export TensorRT engines.
+We use `trtexec` to export TensorRT engines. You can also find some scripts in [weights](./weights/)
 
 ### Web show
 
