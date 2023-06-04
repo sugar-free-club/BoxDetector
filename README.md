@@ -38,8 +38,13 @@ All objects in the scenario can be configured in `genreate_data.py`.
 
 ### Training
 
+We use NVIDIA TAO to train SSD models. You can learn from [model_gym/ModelGym.ipynb](./model_gym/ModelGym.ipynb).
+
+We use MMYOLO to train YOLO models. Configs are inside [weights](./weights/).
+
 ### Deployment
 
+We use `trtexec` to export TensorRT engines.
 
 ### Web show
 
