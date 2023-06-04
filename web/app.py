@@ -48,6 +48,10 @@ with gr.Blocks(title="Sugar-free club", theme=theme, css=css) as demo:
                 "web_sample.jpg",
         ]
         return images
+
+    def get_imgs_h():
+        images = []
+        return images
     
     def run(image):
         '''test_model'''
@@ -100,9 +104,11 @@ with gr.Blocks(title="Sugar-free club", theme=theme, css=css) as demo:
             outputs=image_output,
             fn=run
         )
-        btn_sce = gr.Button("Show Scenario", variant="primary")
-    with gr.Row():
         text = gr.Textbox(label="Result").style(height=50)
+    with gr.Row():
+        btn_sce = gr.Button("👁️ Show Scenario", variant="primary")
+        btn_sce_h = gr.Button("Hide Scenario", variant="primary")
+        
     with gr.Row():
         imgs = gr.Gallery(label="Generated images", show_label=False).style(columns=[2], rows=[2], object_fit="contain", height="auto")
     
@@ -145,6 +151,7 @@ with gr.Blocks(title="Sugar-free club", theme=theme, css=css) as demo:
     )
     
     btn_sce.click(get_imgs, None, imgs)
+    btn_sce.click(get_imgs_h, None, imgs)
     
 # demo.launch(server_name="192.168.43.135", favicon_path='icon.jpeg') 
 # demo.launch(server_name="0.0.0.0", server_port=5000)
