@@ -1,6 +1,10 @@
 # BoxDetector
 
-We are participating in the NVIDIA 8th Sky Hackathon.
+A web demo for detecting boxes.
+
+## News
+
+- *\[2023-6-5\]* 🥉 This project achieved the 3rd place in the NVIDIA 8th Sky Hackathon.
 
 ## Features
 
